@@ -16,6 +16,6 @@ File: `package.json`
 { 
 	"start": "concurrently \"npm run start:mirror\" \"npm run start:python\"",
 	"start:mirror": "DISPLAY=:0 ./node_modules/.bin/electron js/electron.js", "start:python",
-	"start:python": "python modules/MyModule/server.py"
+	"start:python": "python modules/module_bob/server.py"
 },
 ```
