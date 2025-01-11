@@ -1,33 +1,34 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
-from speech import activate_word
+from speech_listener import wakeup_word
 import voice_talk
+import ollama
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*") 
 
-received_text = "" 
+desiredModel='llama3.2:latest'
+
 # Server is combining the two snippets from speech.py and voice_talk.py
 # Python is only sending data to the mirror, so it's showing what is being said.
 # TODO: Implement text from mirror.
 
-@app.route('/add', methods=['POST']) # For testing
-def send():
-    global received_text
-    data = request.json
-    received_text = data.get("text", "")
-    
-    socketio.emit('update_text', {"text": received_text})
-    voice_talk.generate_voice(received_text)
-    return jsonify({"text": "Text received!"})
-
-@app.route('/sendData', methods=['POST']) # For testing
+@app.route('/sendData', methods=['GET'])
 def send_data():
-    
-    answer_llama = "I am a llama, I don't know"
-    voice_talk.generate_voice(answer_llama)
-    return jsonify({"text": f"{answer_llama}"})
+    user_input = request.args.get('message')
+    response = ollama.chat(model=desiredModel, messages=[
+    {
+        'role': 'user',
+        'content': user_input, 
+    },
+    ])
+
+    OllamaResponse=response['message']['content']
+
+    print("Answer: ", OllamaResponse)
+    voice_talk.generate_voice(OllamaResponse)
+    return jsonify({"text": f"{OllamaResponse}"})
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5001)
-    activate_word()	# start the speech recognition
+    wakeup_word()
